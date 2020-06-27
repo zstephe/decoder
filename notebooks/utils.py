@@ -1,6 +1,7 @@
 import random
 import re
 from math import log
+import numpy
 
 alpha_list = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 
              'p','q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', ' ']
@@ -112,14 +113,14 @@ def normalize_counts(count_list, pseudo_count = 0):
         normalized_counts[i] = (count_list[i] + pseudo_count) / total
     return normalized_counts
 
-def normalize_counts_no_spaces(count_list):
+def normalize_counts_no_spaces(count_list, pseudo_count = 0):
     total = 0
     normalized_counts = []
     for i in range(26):
-        total += count_list[i]
+        total += count_list[i] + pseudo_count
         normalized_counts.append(0)
     for i in range(26):
-        normalized_counts[i] = count_list[i] / total
+        normalized_counts[i] = (count_list[i] + pseudo_count) / total
     return normalized_counts
 
 def compute_transition_matrix(pair_count, pseudo_count = 0):
@@ -138,10 +139,6 @@ def make_letters(file_name):
     #The next line takes out only the letters
     return re.findall('[a-z]|\ ', file)
 
-
-
-
-
 def find_likelihood(text, percent_list):
     likely = 1
     for letter in text:
@@ -152,8 +149,9 @@ def find_likelihood(text, percent_list):
 def find_log_likelihood(text, percent_list):
     log_likely = 0
     for letter in text:
-        letter = alpha_list.index(letter)
-        log_likely += log(percent_list[letter])
+        if letter != ' ':
+            letter = alpha_list.index(letter)
+            log_likely += log(percent_list[letter])
     return log_likely
 
 def find_pair_log_likelihood(text, ref_percent_list, ref_transition_matrix):
@@ -216,3 +214,29 @@ def switch_row_and_columns(text_pair_count, index1, index2):
         value_i2 = int(text_pair_count[i][index2])
         text_pair_count[i][index1] = value_i2
         text_pair_count[i][index2] = value_i1  
+        
+def find_solution_brute(ciphertext, ref_percent_list, ref_transition_matrix):
+    solutions = []
+    for i in range(26):
+        plaintext = decode_caesar_cipher(ciphertext, i)
+        plaintext = ''.join(plaintext)
+        likely = find_log_likelihood(plaintext, ref_percent_list)
+        solutions.append(likely)
+    return solutions
+
+def find_solution_brute_pairs(ciphertext, ref_percent_list, ref_transition_matrix, new_dict = {}, both_list = []):
+    solutions = []
+    for i in range(26):
+        plaintext = decode_caesar_cipher(ciphertext, i)
+        plaintext = ''.join(plaintext)
+        likely = find_pair_log_likelihood(plaintext, ref_percent_list, ref_transition_matrix)
+        solutions.append(likely)
+    return solutions
+
+def ordered_solutions(ciphertext, ref_percent_list, ref_transition_matrix, function_name = find_solution_brute_pairs):
+    solution_list = []
+    solutions = (function_name(ciphertext, ref_percent_list, ref_transition_matrix))
+    index_array = numpy.flipud(numpy.argsort(solutions))
+    for i in range(26):
+        solution_list.append("%02d: %s: %s" % ((index_array[i]), ''.join(decode_caesar_cipher(ciphertext, index_array[i])), str(solutions[index_array[i]])))
+    return solution_list

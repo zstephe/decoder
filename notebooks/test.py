@@ -49,7 +49,6 @@ def test_switch_letters():
 def test_switch_row_and_columns():
     test_matrix = [[1,2,3],[4,5,6],[7,8,9]]
     switch_row_and_columns(test_matrix, 1, 2)
-    print()
     assert (test_matrix == [[1,3,2],[7,9,8],[4,6,5]])
     print('test passed: switch_row_and_columns')
 
