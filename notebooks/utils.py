@@ -240,3 +240,12 @@ def ordered_solutions(ciphertext, ref_percent_list, ref_transition_matrix, funct
     for i in range(26):
         solution_list.append("%02d: %s: %s" % ((index_array[i]), ''.join(decode_caesar_cipher(ciphertext, index_array[i])), str(solutions[index_array[i]])))
     return solution_list
+
+
+def find_language(text, german_percent_list, german_transition_matrix, english_percent_list, english_transition_matrix):
+    german_likelihood = find_pair_log_likelihood(text, german_percent_list, german_transition_matrix)
+    english_likelihood = find_pair_log_likelihood(text, english_percent_list, english_transition_matrix)
+    if german_likelihood > english_likelihood:
+        return 'German'
+    else:
+        return 'English'
