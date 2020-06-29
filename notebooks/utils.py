@@ -249,3 +249,47 @@ def find_language(text, german_percent_list, german_transition_matrix, english_p
         return 'German'
     else:
         return 'English'
+    
+    
+def decode_aris_no_key(ciphertext, start_key, ref_letter_percent, ref_transition_matrix, guess_num = 3000):
+    changes = 0
+    num_key = list(start_key)
+    
+    for i in range(guess_num):
+        index1 = random.randint(0, 25)
+        index2 = random.randint(0, 25)
+        plaintext = decode_aris(ciphertext, num_key)
+        
+        new_num_key = list(num_key) #set up new_num_key by switching indices
+        new_num_key[index1], new_num_key[index2] = num_key[index2], num_key[index1]
+        
+        #decode and check likelihood
+        new_plaintext = decode_aris(ciphertext, new_num_key)
+        plaintext_likely = find_pair_log_likelihood(plaintext, ref_letter_percent, ref_transition_matrix)
+        new_plaintext_likely = find_pair_log_likelihood(new_plaintext, ref_letter_percent, ref_transition_matrix)
+        
+        #if likelihood is greater, set num_key to new_num_key
+        if new_plaintext_likely > plaintext_likely:
+            num_key = list(new_num_key)
+            changes += 1
+        
+        plaintext = decode_aris(ciphertext, num_key)
+        log_likelihood = find_pair_log_likelihood(plaintext, ref_letter_percent, ref_transition_matrix)
+    return (''.join(decode_aris(ciphertext, num_key))), changes, log_likelihood
+
+def make_start_key(text, ref_percent_list):
+    start_key = []
+    text_letter_count = count_letters(text)
+    text_percent_list = normalize_counts_no_spaces(text_letter_count)
+    sorted_text_percent_list = list(text_percent_list)
+    sorted_text_percent_list.sort(reverse = True)
+    sorted_ref_percent_list = list(ref_percent_list)
+    sorted_ref_percent_list.sort(reverse = True)
+    for i in range(26):
+        start_key.append(0)
+    for i in range(26):
+        key_index = ref_percent_list.index(sorted_ref_percent_list[i])
+        key_value = text_percent_list.index(sorted_text_percent_list[i])
+        start_key[key_index] = key_value
+        text_percent_list[key_value] = -1
+    return start_key
