@@ -93,13 +93,16 @@ def count_letters(text):
     return letter_count
 
 def count_letter_pairs(text):
+    #here we are putting a space at the front of the text so the first letter pair is counted as a space and then the letter.
+    new_text = list(text)
+    new_text.insert(0, ' ')
     pair_count = []
     for i in range(27):
         pair_count.append([])
         for l2 in range(27):
             pair_count[i].append(0)
-    for i in range(len(text) - 1):
-        pair_count[alpha_list.index(text[i])][alpha_list.index(text[i + 1])] += 1
+    for i in range(len(new_text) - 1):
+        pair_count[alpha_list.index(new_text[i])][alpha_list.index(new_text[i + 1])] += 1
     return pair_count
 
 
@@ -154,12 +157,13 @@ def find_log_likelihood(text, percent_list):
             log_likely += log(percent_list[letter])
     return log_likely
 
-def find_pair_log_likelihood(text, ref_percent_list, ref_transition_matrix):
+def find_pair_log_likelihood(text, ref_transition_matrix):
+    new_text = list(text)
+    new_text.insert(0, ' ')
     log_likely = 0
-    log_likely += log(ref_percent_list[alpha_list.index(text[0])])
-    for letter in range(len(text) - 1):
-        first_index = alpha_list.index(text[letter])
-        second_index = alpha_list.index(text[letter + 1])
+    for letter in range(len(new_text) - 1):
+        first_index = alpha_list.index(new_text[letter])
+        second_index = alpha_list.index(new_text[letter + 1])
         if ref_transition_matrix[first_index][second_index] != 0:
             log_likely += log(ref_transition_matrix[first_index][second_index])
     return log_likely
@@ -229,7 +233,7 @@ def find_solution_brute_pairs(ciphertext, ref_percent_list, ref_transition_matri
     for i in range(26):
         plaintext = decode_caesar_cipher(ciphertext, i)
         plaintext = ''.join(plaintext)
-        likely = find_pair_log_likelihood(plaintext, ref_percent_list, ref_transition_matrix)
+        likely = find_pair_log_likelihood(plaintext, ref_transition_matrix)
         solutions.append(likely)
     return solutions
 
@@ -243,8 +247,8 @@ def ordered_solutions(ciphertext, ref_percent_list, ref_transition_matrix, funct
 
 
 def find_language(text, german_percent_list, german_transition_matrix, english_percent_list, english_transition_matrix):
-    german_likelihood = find_pair_log_likelihood(text, german_percent_list, german_transition_matrix)
-    english_likelihood = find_pair_log_likelihood(text, english_percent_list, english_transition_matrix)
+    german_likelihood = find_pair_log_likelihood(text, german_transition_matrix)
+    english_likelihood = find_pair_log_likelihood(text, english_transition_matrix)
     if german_likelihood > english_likelihood:
         return 'German'
     else:
@@ -265,8 +269,8 @@ def decode_aris_no_key(ciphertext, start_key, ref_letter_percent, ref_transition
         
         #decode and check likelihood
         new_plaintext = decode_aris(ciphertext, new_num_key)
-        plaintext_likely = find_pair_log_likelihood(plaintext, ref_letter_percent, ref_transition_matrix)
-        new_plaintext_likely = find_pair_log_likelihood(new_plaintext, ref_letter_percent, ref_transition_matrix)
+        plaintext_likely = find_pair_log_likelihood(plaintext, ref_transition_matrix)
+        new_plaintext_likely = find_pair_log_likelihood(new_plaintext, ref_transition_matrix)
         
         #if likelihood is greater, set num_key to new_num_key
         if new_plaintext_likely > plaintext_likely:
@@ -274,7 +278,7 @@ def decode_aris_no_key(ciphertext, start_key, ref_letter_percent, ref_transition
             changes += 1
         
         plaintext = decode_aris(ciphertext, num_key)
-        log_likelihood = find_pair_log_likelihood(plaintext, ref_letter_percent, ref_transition_matrix)
+        log_likelihood = find_pair_log_likelihood(plaintext, ref_transition_matrix)
     return (''.join(decode_aris(ciphertext, num_key))), changes, log_likelihood
 
 def make_start_key(text, ref_percent_list):
@@ -293,3 +297,45 @@ def make_start_key(text, ref_percent_list):
         start_key[key_index] = key_value
         text_percent_list[key_value] = -1
     return start_key
+
+
+def decode_aris_faster(ciphertext, start_key, text_pair_count, ref_letter_percent, \
+                       ref_transition_matrix, guess_num = 3000, seed = 1):
+    random.seed(seed)
+    count = 0
+    num_key = list(start_key)
+    for i in range(guess_num):
+        index1 = random.randint(0, 25)
+        index2 = random.randint(0, 25)
+        while index1 == index2:
+            index1 = random.randint(0, 25)
+        print("seed: ",seed)
+        print("index1 : ",index1)
+        print("index2 : " ,index2)
+
+        plaintext = decode_aris(ciphertext, num_key)
+        change = calculate_log_likelihood_change(plaintext, text_pair_count, ref_letter_percent,\
+                                             ref_transition_matrix, index1, index2, num_key)
+        print(num_key)
+        print(change)
+        if change > 0:
+            num_1 = int(num_key[index1])
+            num_key[index1] = int(num_key[index2])
+            num_key[index2] = num_1
+            count += 1
+            switch_row_and_columns(text_pair_count, index1, index2)
+    return(num_key)
+
+
+def compute_key_log_likelihood_singles(text_letter_counts, ref_letter_percents, num_key):
+    total = 0
+    for i in range(26):
+        total += text_letter_counts[i] * log(ref_letter_percents[num_key[i]])
+    return total
+
+def compute_key_log_likelihood_pairs(text_pair_counts, ref_matrix, num_key):
+    total = 0
+    for i in range(27):
+        for j in range(27):
+            total += text_pair_counts[i][j] * log(ref_matrix[num_key[i]][num_key[j]])
+    return total
