@@ -342,25 +342,30 @@ def compute_key_log_likelihood_pairs(text_pair_counts, ref_matrix, num_key):
 
 def encode_vigenere(plaintext, codeword):
     num_plaintext = char_to_num(plaintext)
-    print(num_plaintext)
     num_codeword = char_to_num(codeword)
     codeword_index = 0
     for i in range(len(num_plaintext)):
-        codeword_index = 
-        if num_plaintext != 26:
-            num_plaintext[i] += num_codeword[i%len(num_codeword)]
+        if num_plaintext[i] != 26:
+            num_plaintext[i] += num_codeword[codeword_index]
             if num_plaintext[i] >= 26:
                 num_plaintext[i] -= 26
+            codeword_index += 1
+            if codeword_index >= len(num_codeword):
+                codeword_index -= len(num_codeword)
     ciphertext = num_to_char(num_plaintext)
     return ciphertext
 
 def decode_vigenere(ciphertext, codeword):
     num_ciphertext = char_to_num(ciphertext)
     num_codeword = char_to_num(codeword)
+    codeword_index = 0
     for i in range(len(num_ciphertext)):
-        if num_ciphertext != 26:
-            num_ciphertext[i] -= num_codeword[i%len(num_codeword)]
-            if num_ciphertext[i] <= 26:
+        if num_ciphertext[i] != 26:
+            num_ciphertext[i] -= num_codeword[codeword_index]
+            if num_ciphertext[i] < 0:
                 num_ciphertext[i] += 26
+            codeword_index += 1
+            if codeword_index >= len(num_codeword):
+                codeword_index -= len(num_codeword)
     plaintext = num_to_char(num_ciphertext)
     return plaintext
