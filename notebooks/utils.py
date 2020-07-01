@@ -6,6 +6,10 @@ import numpy
 alpha_list = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 
              'p','q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', ' ']
 
+bacon1_list = ['aaaaa', 'aaaab', 'aaaba', 'aaabb', 'aabaa', 'aabab', 'aabba', 'aabbb', 'abaaa', 'abaaa', 'abaab', 'ababa', 'ababb', 'abbaa', 'abbab', 'abbba', 'abbbb', 'baaaa', 'baaab', 'baaba', 'baabb', 'baabb', 'babaa', 'babab', 'babba', 'babbb']
+
+bacon2_list = ['aaaaa', 'aaaab', 'aaaba', 'aaabb', 'aabaa', 'aabab', 'aabba', 'aabbb', 'abaaa', 'abaab', 'ababa', 'ababb', 'abbaa', 'abbab', 'abbba', 'abbbb', 'baaaa', 'baaab', 'baaba', 'baabb', 'babaa', 'babab', 'babba', 'babbb', 'bbaaa', 'bbaab']
+
 
 # char_to_num, takes a piece of text (a string of lowercase letters) and returns a list of the numerical values for each number, based on the indices in alpha_list. 
 def char_to_num(char_text):
@@ -368,4 +372,23 @@ def decode_vigenere(ciphertext, codeword):
             if codeword_index >= len(num_codeword):
                 codeword_index -= len(num_codeword)
     plaintext = num_to_char(num_ciphertext)
+    return plaintext
+
+def encode_bacon(plaintext, bacon_list):
+    num_plaintext = char_to_num(plaintext)
+    ciphertext = []
+    for num in num_plaintext:
+        if num != 26:
+            ciphertext.append(bacon_list[num])
+        else:
+            ciphertext.append(' ')
+    return ciphertext
+
+def decode_bacon(ciphertext, bacon_list):
+    plaintext = []
+    for letter in ciphertext:
+        if letter != ' ':
+            plaintext.append(alpha_list[bacon_list.index(letter)])
+        else:
+            plaintext.append(' ')
     return plaintext
