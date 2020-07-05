@@ -330,19 +330,72 @@ def decode_aris_faster(ciphertext, start_key, text_pair_count, ref_letter_percen
             switch_row_and_columns(text_pair_count, index1, index2)
     return(num_key)
 
+def new_decode_aris_faster(start_key, text_pair_count, ref_transition_matrix, guess_num = 3000, seed = 1):
+    random.seed(seed)
+    num_key = list(start_key)
+    for i in range(guess_num):
+        index1 = random.randint(0, 25)
+        index2 = random.randint(0, 25)
+        while index1 == index2:
+            index1 = random.randint(0, 25)
+        #print("seed: ",seed)
+        #print("index1 : ",index1)
+        #print("index2 : " ,index2)
+        #print("num_key:", num_key)
+        change = compute_key_log_likelihood_pairs_change(text_pair_count, ref_transition_matrix, index1, index2, num_key)
+        
+        #print(change)
+        if change > 0:
+            num_1 = int(num_key[index1])
+            num_key[index1] = int(num_key[index2])
+            num_key[index2] = num_1
+    return(num_key)
+
 
 def compute_key_log_likelihood_singles(text_letter_counts, ref_letter_percents, num_key):
     total = 0
     for i in range(26):
-        total += text_letter_counts[i] * log(ref_letter_percents[num_key[i]])
+        total += text_letter_counts[i] * log(ref_letter_percents[num_key.index(i)])
     return total
 
 def compute_key_log_likelihood_pairs(text_pair_counts, ref_matrix, num_key):
     total = 0
     for i in range(27):
         for j in range(27):
-            total += text_pair_counts[i][j] * log(ref_matrix[num_key[i]][num_key[j]])
+            '''if(text_pair_counts[i][j]>0):
+                print(i,num_key[i])
+                print(j,num_key[j])
+                print(text_pair_counts[i][j])
+                print(log(ref_matrix[num_key[i]][num_key[j]]))'''
+            total += text_pair_counts[i][j] * log(ref_matrix[num_key.index(i)][num_key.index(j)])
     return total
+
+def compute_key_log_likelihood_pairs_change(text_pair_counts, ref_matrix, index1, index2, num_key):
+    column_change, row_change = 0, 0
+    print(num_key)
+    l1 = int(num_key.index(index1))
+    l2 = int(num_key.index(index2))
+    for j in range(27):
+        if j != index1 and j != index2:
+            row_change += (text_pair_counts[index1][j] - text_pair_counts[index2][j])\
+            * (log(ref_matrix[l1][num_key.index(j)]) - log(ref_matrix[l2][num_key.index(j)]))
+    for i in range(27):
+        if i != index1 and i != index2:
+            column_change += (text_pair_counts[i][index1] - text_pair_counts[i][index2])\
+            * (log(ref_matrix[num_key.index(i)][l1]) - log(ref_matrix[num_key.index(i)][l2]))
+    
+    change = column_change + row_change
+    
+    change += (text_pair_counts[index1][index1] - text_pair_counts[index2][index2])\
+    * (log(ref_matrix[l1][l1]) - log(ref_matrix[l2][l2]))
+    
+    change += (text_pair_counts[index1][index2] - text_pair_counts[index2][index1])\
+    * (log(ref_matrix[l1][l2]) - log(ref_matrix[l2][l1]))
+    
+    return -1 * change
+    
+    
+
 
 def encode_vigenere(plaintext, codeword):
     num_plaintext = char_to_num(plaintext)
