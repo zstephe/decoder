@@ -346,9 +346,10 @@ def new_decode_aris_faster(start_key, text_pair_count, ref_transition_matrix, gu
         
         #print(change)
         if change > 0:
-            num_1 = int(num_key[index1])
-            num_key[index1] = int(num_key[index2])
-            num_key[index2] = num_1
+            currently_encoded_by_index1 = int(num_key.index(index1))
+            currently_encoded_by_index2 = int(num_key.index(index2)) 
+            num_key[currently_encoded_by_index1] = index2 #switch the encoding
+            num_key[currently_encoded_by_index2] = index1 
     return(num_key)
 
 
@@ -372,7 +373,7 @@ def compute_key_log_likelihood_pairs(text_pair_counts, ref_matrix, num_key):
 
 def compute_key_log_likelihood_pairs_change(text_pair_counts, ref_matrix, index1, index2, num_key):
     column_change, row_change = 0, 0
-    print(num_key)
+    
     l1 = int(num_key.index(index1))
     l2 = int(num_key.index(index2))
     for j in range(27):
