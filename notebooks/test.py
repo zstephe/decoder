@@ -29,8 +29,8 @@ def encode_decode_aris(plaintext, num_key):
 def test_calc_change(test_text, changed_text, l1, l2):
     text_letter_count = count_letters(test_text)
     text_pair_count = count_letter_pairs(test_text)
-    one = find_pair_log_likelihood(test_text, bible_letter_percent, bible_matrix)
-    two = find_pair_log_likelihood(changed_text, bible_letter_percent, bible_matrix)
+    one = find_pair_log_likelihood(test_text, bible_matrix)
+    two = find_pair_log_likelihood(changed_text, bible_matrix)
     diff = (two - one)
     start_key = list(alpha_list)
     num_key = char_to_num(start_key)
@@ -51,6 +51,19 @@ def test_switch_row_and_columns():
     switch_row_and_columns(test_matrix, 1, 2)
     assert (test_matrix == [[1,3,2],[7,9,8],[4,6,5]])
     print('test passed: switch_row_and_columns')
+    
+def test_compute_likelihood(ref_matrix, ref_letter_percent):
+    plaintext = 'this is the text to be encoded and decoded'
+    ciphertext = encode_aris(plaintext, make_rand_aris_key())
+    ciphertext_pair_counts = count_letter_pairs(ciphertext)
+    start_key = make_start_key(ciphertext, ref_letter_percent)
+    num_key = new_decode_aris_faster(start_key, ciphertext_pair_counts, bible_matrix)
+    old1 = compute_key_log_likelihood_pairs(ciphertext_pair_counts, ref_matrix, start_key)
+    new1 = compute_key_log_likelihood_pairs(ciphertext_pair_counts, ref_matrix, num_key)
+    old2 = find_pair_log_likelihood(decode_aris(ciphertext, start_key), ref_matrix)
+    new2 = find_pair_log_likelihood(decode_aris(ciphertext, num_key), ref_matrix)
+    assert isclose(new1-old1, new2-old2), 'should be the almost exactly the same'
+    print('test passed: compute_likelihood')
 
 
 bible_letters = make_letters('../data/bible.txt')
@@ -64,6 +77,7 @@ ct = 'lehho'
 l1 = 'h'
 l2 = 'l'
                    
-test_calc_change(tt, ct, l1, l2)
+#test_calc_change(tt, ct, l1, l2)
 test_switch_letters()
 test_switch_row_and_columns()
+test_compute_likelihood(bible_matrix, bible_letter_percent)

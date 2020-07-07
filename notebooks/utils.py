@@ -304,8 +304,7 @@ def make_start_key(text, ref_percent_list):
 
 
 def decode_aris_faster(ciphertext, start_key, text_pair_count, ref_letter_percent, \
-                       ref_transition_matrix, guess_num = 3000, seed = 1):
-    random.seed(seed)
+                       ref_transition_matrix, guess_num = 3000):
     count = 0
     num_key = list(start_key)
     for i in range(guess_num):
@@ -313,15 +312,10 @@ def decode_aris_faster(ciphertext, start_key, text_pair_count, ref_letter_percen
         index2 = random.randint(0, 25)
         while index1 == index2:
             index1 = random.randint(0, 25)
-        print("seed: ",seed)
-        print("index1 : ",index1)
-        print("index2 : " ,index2)
 
         plaintext = decode_aris(ciphertext, num_key)
         change = calculate_log_likelihood_change(plaintext, text_pair_count, ref_letter_percent,\
                                              ref_transition_matrix, index1, index2, num_key)
-        print(num_key)
-        print(change)
         if change > 0:
             num_1 = int(num_key[index1])
             num_key[index1] = int(num_key[index2])
@@ -330,21 +324,15 @@ def decode_aris_faster(ciphertext, start_key, text_pair_count, ref_letter_percen
             switch_row_and_columns(text_pair_count, index1, index2)
     return(num_key)
 
-def new_decode_aris_faster(start_key, text_pair_count, ref_transition_matrix, guess_num = 3000, seed = 1):
-    random.seed(seed)
+def new_decode_aris_faster(start_key, text_pair_count, ref_transition_matrix, guess_num = 3000):
     num_key = list(start_key)
     for i in range(guess_num):
         index1 = random.randint(0, 25)
         index2 = random.randint(0, 25)
         while index1 == index2:
             index1 = random.randint(0, 25)
-        #print("seed: ",seed)
-        #print("index1 : ",index1)
-        #print("index2 : " ,index2)
-        #print("num_key:", num_key)
         change = compute_key_log_likelihood_pairs_change(text_pair_count, ref_transition_matrix, index1, index2, num_key)
         
-        #print(change)
         if change > 0:
             currently_encoded_by_index1 = int(num_key.index(index1))
             currently_encoded_by_index2 = int(num_key.index(index2)) 
