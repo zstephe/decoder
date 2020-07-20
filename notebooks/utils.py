@@ -434,3 +434,11 @@ def decode_bacon(ciphertext, bacon_list):
         else:
             plaintext.append(' ')
     return plaintext
+
+
+def find_vigenere_key(ciphertext_pair_counts, key_length, ref_matrix):
+    for i in 
+    
+
+def decode_vigenere_no_key():
+    
