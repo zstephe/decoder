@@ -437,8 +437,11 @@ def decode_bacon(ciphertext, bacon_list):
 
 
 def find_vigenere_key(ciphertext_pair_counts, key_length, ref_matrix):
-    for i in 
+    key = ''
     
 
-def decode_vigenere_no_key():
-    
+def decode_vigenere_no_key(ciphertext_pair_counts, ref_matrix, max_length = 10):
+    key = ''
+    for i in range(max_length):
+        find_vigenere_key(ciphertext_pair_counts, i+1, ref_matrix)
+        
